@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import mysql.connector
@@ -10,6 +10,7 @@ import os
 import requests
 import random
 
+# Initialisation de l'API
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -22,17 +23,19 @@ def get_mysql_connection(host, user, mdp, database):
         database=database
     )
 
+# Import des variables
 load_dotenv()
 host     = os.getenv('host')
 database = os.getenv('database')
 user     = os.getenv('root')
 mdp      = os.getenv('mdp')
 
+# Base MongoDB
 mongo_client = MongoClient("mongodb://localhost:27017")
 mongo_db = mongo_client["steam_finder"]
 headers_collection = mongo_db["headers"]
 
-def get_game_details(search_term: str = None):
+def get_game_details(search_term: str = None, with_header: bool = True):
     try:
         connection = get_mysql_connection(host, user, mdp, database)
         cursor = connection.cursor(dictionary=True)
@@ -77,9 +80,10 @@ def get_game_details(search_term: str = None):
         else:
             cursor.execute("SELECT * FROM games")
         results = cursor.fetchall()
-        for game in results:
-            header = headers_collection.find_one({"_id": game["game_id"]})
-            game["header"] = header.get("image") if header and "image" in header else None
+        if with_header:
+            for game in results:
+                header = headers_collection.find_one({"_id": game["game_id"]})
+                game["header"] = header.get("image") if header and "image" in header else None
         return results
     except Error as e:
         print(e)
@@ -89,7 +93,7 @@ def get_game_details(search_term: str = None):
             cursor.close()
             connection.close()
 
-def get_random_game_details(limit: int = 5):
+def get_random_game_details(limit: int = 5, with_header: bool = True):
     try:
         connection = get_mysql_connection(host, user, mdp, database)
         cursor = connection.cursor(dictionary=True)
@@ -136,9 +140,10 @@ def get_random_game_details(limit: int = 5):
         """
         cursor.execute(query, tuple(sampled_ids))
         results = cursor.fetchall()
-        for game in results:
-            header = headers_collection.find_one({"_id": game["game_id"]})
-            game["header"] = header.get("image") if header and "image" in header else None
+        if with_header:
+            for game in results:
+                header = headers_collection.find_one({"_id": game["game_id"]})
+                game["header"] = header.get("image") if header and "image" in header else None
         return results
     except Error as e:
         print(e)
@@ -150,13 +155,15 @@ def get_random_game_details(limit: int = 5):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    games = get_random_game_details(limit=5)
+    # Pour la page HTML, on souhaite récupérer le header.
+    games = get_random_game_details(limit=5, with_header=True)
     return templates.TemplateResponse("home.html", {"request": request, "games": games})
 
 @app.get("/search", response_class=HTMLResponse)
 async def search(request: Request, q: str = None):
+    # Pour la page HTML des résultats, on récupère les headers.
     if q:
-        games = get_game_details(search_term=q)
+        games = get_game_details(search_term=q, with_header=True)
     else:
         games = []
     return templates.TemplateResponse("results.html", {"request": request, "games": games, "query": q})
@@ -173,3 +180,15 @@ async def steam_search(request: Request, q: str):
 @app.post("/search", response_class=HTMLResponse)
 async def search_post(request: Request, q: str = Form(...)):
     return RedirectResponse(url=f"/search?q={q}", status_code=303)
+
+@app.get("/api/search", response_class=JSONResponse)
+async def api_search(search: str = None):
+    if search:
+        games = get_game_details(search_term=search, with_header=False)
+    else:
+        games = []
+    return {
+        "search": search,
+        "count": len(games),
+        "results": games
+    }
