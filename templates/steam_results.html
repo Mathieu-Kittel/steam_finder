@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultats Steam pour "{{ query }}"</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Résultats Steam pour "{{ query }}"</h1>
+    <a href="/">Retour à l'accueil</a>
+    {% if results['total'] > 0 and results['items'] %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nom du jeu</th>
+                <th>ID</th>
+                <th>Prix Initial</th>
+                <th>Prix Final</th>
+                <th>Image</th>
+                <th>Metascore</th>
+                <th>Lien Steam</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in results['items'] %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.id }}</td>
+                <td>
+                    {% if item.price %}
+                        {{ (item.price.initial / 100) | round(2) }} {{ item.price.currency }}
+                    {% else %}
+                        Gratuit
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.price %}
+                        {{ (item.price.final / 100) | round(2) }} {{ item.price.currency }}
+                    {% else %}
+                        Gratuit
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.tiny_image %}
+                        <img src="{{ item.tiny_image }}" alt="{{ item.name }}">
+                    {% endif %}
+                </td>
+                <td>{{ item.metascore }}</td>
+                <td>
+                    <a href="https://store.steampowered.com/app/{{ item.id }}" target="_blank">Voir sur Steam</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>Aucun résultat trouvé.</p>
+    {% endif %}
+</body>
+</html>

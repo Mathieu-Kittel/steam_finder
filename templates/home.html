@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Steam Finder - Accueil</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Steam Finder</h1>
+    <form action="/search" method="get">
+        <input type="text" name="q" placeholder="Rechercher un jeu..." required>
+        <button type="submit">Rechercher</button>
+    </form>
+    
+    <h2>Jeux au hasard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom du jeu</th>
+                <th>Image</th>
+                <th>Prix</th>
+                <th>Date de sortie</th>
+                <th>Langues</th>
+                <th>Features</th>
+                <th>Tags</th>
+                <th>Genres</th>
+                <th>Publishers</th>
+                <th>Développeurs</th>
+                <th>Review</th>
+                <th>Snippet</th>
+                <th>Metacritic</th>
+                <th>Lien</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for game in games %}
+            <tr>
+                <td>{{ game.game_name }}</td>
+                <td>
+                    {% if game.header %}
+                        <img src="data:image/jpeg;base64,{{ game.header }}" alt="{{ game.game_name }}">
+                    {% endif %}
+                </td>
+                <td>{{ game.latest_price }}</td>
+                <td>{{ game.release_date }}</td>
+                <td>{{ game.languages }}</td>
+                <td>{{ game.features }}</td>
+                <td>{{ game.tags }}</td>
+                <td>{{ game.genres }}</td>
+                <td>{{ game.publishers }}</td>
+                <td>{{ game.developers }}</td>
+                <td>{{ game.review_name }}</td>
+                <td>{{ game.snippet }}</td>
+                <td>{{ game.metacritic }}</td>
+                <td>
+                    {% if game.link %}
+                        <a href="{{ game.link }}" target="_blank">Voir</a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

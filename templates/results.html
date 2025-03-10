@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultats pour "{{ query }}"</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Résultats pour "{{ query }}"</h1>
+    <a href="/">Retour à l'accueil</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom du jeu</th>
+                <th>Image</th>
+                <th>Prix</th>
+                <th>Date de sortie</th>
+                <th>Langues</th>
+                <th>Features</th>
+                <th>Tags</th>
+                <th>Genres</th>
+                <th>Publishers</th>
+                <th>Développeurs</th>
+                <th>Review</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in games %}
+            <tr>
+                <td>{{ game.game_name }}</td>
+                <td>
+                    {% if game.header %}
+                        <img src="data:image/jpeg;base64,{{ game.header }}" alt="{{ game.game_name }}">
+                    {% endif %}
+                </td>
+                <td>{{ game.latest_price }}</td>
+                <td>{{ game.release_date }}</td>
+                <td>{{ game.languages }}</td>
+                <td>{{ game.features }}</td>
+                <td>{{ game.tags }}</td>
+                <td>{{ game.genres }}</td>
+                <td>{{ game.publishers }}</td>
+                <td>{{ game.developers }}</td>
+                <td>{{ game.review_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <form action="/steam_search" method="get">
+        <input type="hidden" name="q" value="{{ query }}">
+        <button type="submit">Plus de résultats</button>
+    </form>
+</body>
+</html>
